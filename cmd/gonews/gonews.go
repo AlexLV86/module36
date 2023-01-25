@@ -12,7 +12,7 @@ import (
 	"module36/GoNews/pkg/api"
 	"module36/GoNews/pkg/rss"
 	"module36/GoNews/pkg/storage"
-	"module36/GoNews/pkg/storage/memdb"
+	"module36/GoNews/pkg/storage/postgres"
 )
 
 type Config struct {
@@ -25,7 +25,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db := memdb.New()
+	//db := memdb.New()
+	// Реляционная БД PostgreSQL.
+	path := os.Getenv("dbpath")
+	if path == "" {
+		os.Exit(1)
+	}
+	db, err := postgres.New(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	chErr := make(chan error)
 	chPosts := make(chan []storage.Post)
 	// запускаем обработчик ошибок
@@ -87,6 +97,7 @@ func handlerDBPosts(chErr chan<- error, chPosts <-chan []storage.Post, db storag
 		if err != nil {
 			// передать в канал ошибку и continue
 			chErr <- err
+			continue
 		}
 	}
 }
